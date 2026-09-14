@@ -7,11 +7,10 @@ const interval = 1000/fps;
 let cellSize = 30;
 let isStartBtnClicked = false;
 let lastTime = 0;
-let directionX = 0;
 let directionY = 0;
+let directionOnFrame = "right";
 let appleCuantity = 0;
 let colorIndex = 0;
-
 
 const columns = canvas.width / cellSize;
 const rows = canvas.height / cellSize;
@@ -21,12 +20,15 @@ const appleColors = ["#DB1528", "#8C101A", "#F25C69",
 const snake = {
     width: cellSize,
     height: cellSize,
-    x: columns / 2 * cellSize,
-    y: rows / 2 * cellSize,
     speed: cellSize,
     color: "#2ECC71",
-    body: []
+    body: [{
+        x: columns / 2 * cellSize,
+        y: rows / 2 * cellSize,
+    }]
 };
+
+let directionX = snake.speed;
 
 const apple = {
     width: cellSize,
@@ -36,12 +38,6 @@ const apple = {
     color: "",
     eaten: function(){
         appleCuantity--;
-        snake.body.push({
-            width: snake.width,
-            height: snake.height,
-            snake.x
-        }
-        );
     }
 };
 
@@ -70,6 +66,8 @@ function createCells(){
 }
 createCells()
 
+
+
 function gameLoop(currentTime){
     requestAnimationFrame(gameLoop);
     const delta = currentTime - lastTime;
@@ -77,21 +75,30 @@ function gameLoop(currentTime){
         lastTime = currentTime - (delta % interval);
         ctx.clearRect(0, 0, canvas.width, canvas.height); 
         createCells();
-        if (snake.x === apple.x && snake.y === apple.y){
+        const futureHead = {
+            x: snake.body[0].x + directionX,
+            y: snake.body[0].y + directionY
+        };
+        snake.body.unshift(futureHead);
+        if (snake.body[0].x === apple.x && snake.body[0].y === apple.y){
             apple.eaten();
+        } else {
+            snake.body.pop();
+        }
+        if (directionX > 0) directionOnFrame = "right";
+        if (directionX < 0) directionOnFrame = "left";
+        if (directionY > 0) directionOnFrame = "down";
+        if (directionY < 0) directionOnFrame = "up";
+        ctx.fillStyle = snake.color;
+        for (let i = 0; i < snake.body.length; i++){
+            ctx.fillRect(snake.body[i].x, snake.body[i].y, snake.width, snake.height);
         }
         if (appleCuantity <= 0){
             addApple();
         }
-        if (directionX === 0 && directionY === 0){
-            snake.x += snake.speed
-        }
         ctx.fillStyle = appleColors[colorIndex];
         ctx.fillRect(apple.x, apple.y, apple.width,apple.height);
-        snake.x += directionX;
-        snake.y += directionY;
-        ctx.fillStyle = snake.color;
-        ctx.fillRect(snake.x, snake.y, snake.width, snake.height);
+        console.log(snake.body);
     }
 }
 
@@ -103,27 +110,32 @@ function addApple(){
 }
 
 window.addEventListener("keydown", function(e){
-    switch(e.key){
+    const key = e.key.toLowerCase();
+    switch(key){
         case "w":
-            if (directionY === 0){
+        case "ц":
+            if (directionOnFrame === "left" || directionOnFrame === "right"){
                 directionY = -snake.speed;
                 directionX = 0;
             }
             break;
         case "s":
-            if (directionY === 0){
+        case "ы":
+            if (directionOnFrame === "left" || directionOnFrame === "right"){
                 directionY = snake.speed;
                 directionX = 0;
             }
             break;
         case "a":
-            if (directionX === 0){
+        case "ф":
+            if (directionOnFrame === "up" || directionOnFrame === "down"){
                 directionX = -snake.speed;
                 directionY = 0;
             }
             break;
         case "d":
-            if (directionX === 0){
+        case "в":
+            if (directionOnFrame === "up" || directionOnFrame === "down"){
                 directionX = snake.speed;
                 directionY = 0;
             }
